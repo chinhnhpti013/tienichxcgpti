@@ -1,130 +1,115 @@
 <!DOCTYPE html>
 <html lang="vi">
-
 <head>
-<meta charset="UTF-8">
-<title>SOS Khu vực Quảng Ninh (013)</title>
-
-<link rel="stylesheet" href="style.css">
-
-<link rel="stylesheet"
-href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
+  <meta charset="UTF-8">
+  <title>PTI Insurance Calculator PRO</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body {font-family: Arial; margin:0; background:#0f172a; color:#fff}
+    .container{padding:20px; max-width:1100px; margin:auto}
+    .card{background:#1e293b; padding:20px; border-radius:12px; margin-bottom:20px}
+    input, select{width:100%; padding:10px; margin:6px 0; border-radius:8px; border:none}
+    button{padding:10px 15px; border:none; border-radius:8px; cursor:pointer}
+    .btn{background:#3b82f6; color:#fff}
+    .grid{display:grid; grid-template-columns:1fr 1fr; gap:10px}
+    canvas{background:#fff; border-radius:10px}
+  </style>
 </head>
-
 <body>
+<div class="container">
+  <h1>🚗 PTI Insurance Calculator PRO</h1>
 
-<header>
+  <div class="card">
+    <h3>Nhập thông tin</h3>
+    <div class="grid">
+      <input id="carValue" placeholder="Giá trị xe">
+      <input id="carBrand" placeholder="Hãng xe">
+      <input id="carYear" placeholder="Năm sản xuất">
+      <select id="customerType">
+        <option value="personal">Cá nhân</option>
+        <option value="business">Doanh nghiệp</option>
+      </select>
+      <input id="carCount" placeholder="Số lượng xe">
+      <input id="deductible" placeholder="Mức khấu trừ (0/1/2/5)">
+      <input id="duration" placeholder="Thời gian (tháng)">
+      <input id="tlbt" placeholder="TLBT (%)">
+    </div>
+    <button class="btn" onclick="calculate()">Tính phí</button>
+  </div>
 
-<h1>
-<i class="fa-solid fa-car"></i>
-SOS Khu vực Quảng Ninh (013)
-</h1>
+  <div class="card">
+    <h3>Kết quả</h3>
+    <div id="result"></div>
+    <canvas id="chart"></canvas>
+  </div>
+</div>
 
-<p>AI Tra cứu giá phụ tùng & giá trị xe</p>
+<script>
+function calculate(){
+  let value = parseFloat(document.getElementById('carValue').value)||0;
+  let brand = document.getElementById('carBrand').value.toLowerCase();
+  let year = parseInt(document.getElementById('carYear').value)||2020;
+  let type = document.getElementById('customerType').value;
+  let count = parseInt(document.getElementById('carCount').value)||1;
+  let deductible = parseInt(document.getElementById('deductible').value)||0;
+  let duration = parseInt(document.getElementById('duration').value)||12;
+  let tlbt = parseFloat(document.getElementById('tlbt').value)||0;
 
-</header>
+  let rate = 0.015; // 1.5%
+  let baseFee = value * rate;
 
+  let adjustments = [];
 
-<section class="scan">
+  if(brand.includes('mercedes')){
+    baseFee *= 1.1;
+    adjustments.push('Mercedes +10%');
+  }
 
-<h2>Quét ảnh đăng kiểm</h2>
+  if(type==='business'){
+    baseFee *= 0.9;
+    adjustments.push('Doanh nghiệp -10%');
+  }
 
-<input type="file" id="imageUpload">
+  if(count>=10 && count<=30){
+    baseFee *= 0.9;
+    adjustments.push('Đoàn -10%');
+  }
+  if(count>50){
+    baseFee *= 0.8;
+    adjustments.push('Đoàn -20%');
+  }
 
-<button onclick="scanImage()">
-<i class="fa-solid fa-camera"></i>
-Quét thông tin
-</button>
+  if(deductible===1){baseFee*=0.95}
+  if(deductible===2){baseFee*=0.9}
+  if(deductible===5){baseFee*=0.7}
 
-</section>
+  if(tlbt<30){baseFee*=0.85}
+  if(tlbt>100){baseFee*=1.2}
 
+  if(duration<12){baseFee*=duration/12}
+  if(duration>=24 && duration<=36){baseFee*=0.9}
+  if(duration>36){baseFee*=0.85}
 
-<section class="form">
+  let floorFee = value*0.015*0.7;
+  let finalFee = Math.max(baseFee, floorFee);
 
-<h2>Thông tin xe</h2>
+  document.getElementById('result').innerHTML = `
+    Phí gốc: ${Math.round(value*0.015).toLocaleString()} VND<br>
+    Phí sau điều chỉnh: ${Math.round(baseFee).toLocaleString()} VND<br>
+    Phí sàn: ${Math.round(floorFee).toLocaleString()} VND<br>
+    <b>Phí cuối: ${Math.round(finalFee).toLocaleString()} VND</b><br>
+    Điều chỉnh: ${adjustments.join(', ')}
+  `;
 
-<input id="plate" placeholder="Biển kiểm soát">
-
-<input id="vin" placeholder="Số VIN">
-
-<input id="brand" placeholder="Hãng xe">
-
-<input id="model" placeholder="Model">
-
-<input id="year" placeholder="Năm sản xuất">
-
-<select id="condition">
-
-<option>Mới</option>
-<option>Tốt</option>
-<option>Trung bình</option>
-<option>Tai nạn nhẹ</option>
-<option>Tai nạn nặng</option>
-
-</select>
-
-<select id="region">
-
-<option selected>Quảng Ninh</option>
-<option>Hà Nội</option>
-<option>TP HCM</option>
-
-</select>
-
-</section>
-
-
-<section class="actions">
-
-<button onclick="lookupParts()">
-Tra cứu giá phụ tùng
-</button>
-
-<button onclick="lookupCarValue()">
-Định giá xe
-</button>
-
-<button onclick="resetApp()">
-Reload
-</button>
-
-</section>
-
-
-<section id="result">
-
-<h2>Kết quả AI</h2>
-
-<div id="carValue"></div>
-
-<table id="partsTable">
-
-<thead>
-
-<tr>
-<th>Phụ tùng</th>
-<th>Giá thấp</th>
-<th>Giá TB</th>
-<th>Giá cao</th>
-</tr>
-
-</thead>
-
-<tbody></tbody>
-
-</table>
-
-</section>
-
-
-<canvas id="chart"></canvas>
-
-
-<script type="module" src="app.js"></script>
-
+  new Chart(document.getElementById('chart'),{
+    type:'bar',
+    data:{
+      labels:['Phí gốc','Sau điều chỉnh','Phí sàn','Phí cuối'],
+      datasets:[{data:[value*0.015, baseFee, floorFee, finalFee]}]
+    }
+  });
+}
+</script>
 </body>
-
 </html>
